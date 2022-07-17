@@ -3,11 +3,7 @@ Andrés Senn
 */
 let overlay;
 let loaded = false;
-const rand = fxrand();
-const seed = rand * 10000000000;
-let center;
-let ccolor;
-let pg, pgc;
+let pg;
 
 let X = 0;
 let Y = 0;
@@ -16,13 +12,14 @@ let STEP = 0;
 let gestureIdx = 0;
 let gPos = [];
 let rotf = 0;
-
+let linesat;
+let linecolor;
 let cutSize;
 function setup() {
+	const seed = fxrand() * 1000000000000;
 	overlay = document.querySelector(".overlay");
 	createCanvas(2160, 2160);
 	pg = createGraphics(width, height);
-	pgc = createGraphics(width, height);
 	pixelDensity(1);
 	randomSeed(seed);
 	noiseSeed(seed);
@@ -37,24 +34,27 @@ function setup() {
 	// Background ---------------------------
 	background(255);
 	overlay.style.display = "none";
-	// Shadow
 	setShadow(6, 6, 15, 180);
-	//push();
 	rotateAll(8);
-	colorRect(width / 2, height / 2, width * 2, height * 2, random(255));
-	setShadow(6, 6, 15, 120);
 
-	if (random(1) < 0.5) {
+	// Bg
+	colorRect(width / 2, height / 2, width * 2, height * 2, random(255));
+
+	// Slice 0 | 1
+	if (random() < 0.5) {
 		rotateAll(8);
+		setShadow(8, 8, 20, 200);
 		sliceCanvas("X");
 	}
 	rotateAll(8);
+	setShadow(8, 8, 20, 200);
 	sliceCanvas("Y");
-	// bgRect(pgc, width / 2, height / 2, width * 2, height * 2, random(255));
-	//pop();
 
-	// Gesture
-	// Artificial gesture ----------------------------
+	// Lines colors
+	linesat = random(0, 60);
+	linecolor = random(255);
+
+	// Gesture ----------------------------
 	let noff = 0;
 	let ns = 0.001;
 	let gdir = createVector(0, 0);
@@ -80,6 +80,8 @@ function setup() {
 			eachG++;
 		}
 	}
+
+	// ghost
 	pg.background(255);
 	for (let i = 0; i < gPos.length; i++) {
 		pg.noStroke();
@@ -88,21 +90,61 @@ function setup() {
 	}
 	xs = random(20, 60);
 	ys = random(20, 60);
+
+	// Console
+	document.title = `Sin titulo | Andr\u00e9s Senn | 2022`;
+	console.log(
+		`%cSin titulo | Andr\u00e9s Senn | Projet: https://github.com/andrusenn/sintitulo01`,
+		"background:#333;border-radius:10px;background-size:15%;color:#eee;padding:10px;font-size:15px;text-align:center;",
+	);
 }
 function draw() {
 	//
 	//
 	for (let i = 0; i < 30; i++) {
+		if (STEP == 0) {
+			let multlen = 8;
+			// Shadow
+			setShadow(6, 6, 15, 100);
+			let pos = gPos[gestureIdx % gPos.length];
+			for (let i = 0; i < gPos.length; i++) {
+				if (pos !== gPos[i]) {
+					let d = dist(pos[0], pos[1], gPos[i][0], gPos[i][1]);
+					if (d > 50 && d < 180) {
+						stroke(random(255), random(255));
+						let fi = drawingContext.createLinearGradient(
+							pos[0],
+							pos[1],
+							gPos[i][0],
+							gPos[i][1],
+						);
+						fi.addColorStop(0, color(0, 0));
+						fi.addColorStop(0.1, color(0, 100));
+						let linebright = map(d,50,180,100,255);
+						fi.addColorStop(0.5, color(linecolor, linesat, linebright));
+						fi.addColorStop(0.9, color(linecolor, linesat, linebright));
+						fi.addColorStop(1, color(0, 100));
+						drawingContext.strokeStyle = fi;
+						line(pos[0], pos[1], gPos[i][0], gPos[i][1]);
+					}
+				}
+			}
+			circle(pos[0], pos[1], random(2, 5));
+			gestureIdx++;
+			if(gestureIdx * multlen > gPos.length * multlen){
+				STEP++;
+			}
+		}
 		if (STEP == 1) {
 			push();
-			if (X < width * 0.6) {
+			if (X < width * random(0.1, 0.5)) {
 				translate(width / 2, height / 2);
 				rotate(rotf * (TAU / 8));
 				translate(-width / 2, -height / 2);
 				setShadow(20, 20, 10, 60);
 				// let d = dist(X, Y, width / 2, height / 2);
 				// let cutSize = random(50, 100);
-				let candraw = () => true; //brightness(pg.get(X, Y)) > 50;
+				let candraw = () => brightness(pg.get(X, Y)) > 50;
 				if (candraw()) {
 					let nz = map(sin(Y * 0.01), -1, 1, 0.001, 0.002);
 					const n = noise(X * nz, Y * nz, X * 0.001);
@@ -142,62 +184,30 @@ function draw() {
 					);
 				}
 			}
-			pop();
-		}
-
-		if (STEP == 0) {
-			// Shadow
-			setShadow(4, 4, 15, 120);
-			let pos = gPos[gestureIdx % gPos.length];
-			for (let i = 0; i < gPos.length; i++) {
-				if (pos !== gPos[i]) {
-					let d = dist(pos[0], pos[1], gPos[i][0], gPos[i][1]);
-					if (d > 50 && d < 180) {
-						stroke(random(255), random(255));
-						let lc = random(255);
-						let fi = drawingContext.createLinearGradient(
-							pos[0],
-							pos[1],
-							gPos[i][0],
-							gPos[i][1],
-						);
-						fi.addColorStop(0, color(0, 0));
-						fi.addColorStop(0.1, color(0, 100));
-						fi.addColorStop(0.5, color(lc, random(0, 100), 255));
-						fi.addColorStop(0.9, color(lc, random(0, 100), 255));
-						fi.addColorStop(1, color(0, 100));
-						drawingContext.strokeStyle = fi;
-						line(pos[0], pos[1], gPos[i][0], gPos[i][1]);
-					}
-				}
+			pop();// *****************
+			// Big loop --------
+			if (Y < height - random(100, 500)) {
+				Y += ys;
+			} else {
+				Y = random(100, 400);
+				X += xs;
 			}
-			circle(pos[0], pos[1], random(2, 5));
-			gestureIdx++;
+			if (X > width - random(100, 500)) {
+				X = random(100, 500);
+				STEP++;
+			}
 		}
-		// *****************
-		// Big loop --------
-		if (Y < height - random(100, 500)) {
-			Y += ys;
-		} else {
-			Y = random(100, 400);
-			X += xs;
-		}
-		if (X > width - random(100, 500)) {
-			X = random(100, 500);
-			STEP++;
-			gestureIdx = 0;
 
-			console.log("fin", STEP);
-			//image(pg, width / 2, height / 2);
-		}
+		
 	}
 	// ******************
 	if (STEP == 2) {
 		noLoop();
-		if (random(1) < 0.5) {
+		if (random() < 0.5) {
 			setShadow(0, 0, 20, 200);
 			translate(random(-1000, 1000), random(-1000, 1000));
 			rotateAll(8);
+			setShadow(8, 8, 20, 200);
 			sliceCanvas("Y");
 		}
 	}
@@ -206,7 +216,7 @@ function draw() {
 function sliceCanvas(_slice) {
 	push();
 	noSmooth();
-	const num = int(random(2, 20));
+	const num = int(random(2, 100));
 	let imgs = [];
 
 	for (let s = 0; s < num; s++) {
@@ -214,12 +224,11 @@ function sliceCanvas(_slice) {
 		if (_slice == "X") {
 			img = get((s * width) / num, 0, width / num, height);
 		} else {
-			// Y default
 			img = get(0, (s * height) / num, width, height / num);
 		}
 		imgs.push(img);
 	}
-	let rimg = imgs.sort((a, b) => 0.5 - random(1));
+	let rimg = imgs.sort((a, b) => 0.5 - random());
 	for (let i = 0; i < num; i++) {
 		noFill();
 		if (_slice == "X") {
@@ -249,7 +258,7 @@ function noisemix(_x, _y, _w, _h) {
 		for (let y = _y - h / 2; y < _y + h / 2; y += s) {
 			s = random(2, 5);
 			c = 255;
-			if (random(1) > 0.5) {
+			if (random() > 0.5) {
 				c = 0;
 			}
 			noStroke();
@@ -275,14 +284,13 @@ function colorRect(cx, cy, w, h, c) {
 		cx + w / 2,
 		cy + h / 2,
 	);
-	let c1 = color(c, 60, 255);
-	let c2 = color(c, 60, 20);
-	if (random(1) < 0.2) {
+	let c1 = color(c, 0, 255);
+	let c2 = color(c + random(-50, 50), random(255), random(255));
+	if (random() < 0.2) {
 		c1 = color(c, 0, 255);
 		c2 = color(c, 0, 0);
 	}
 	fi.addColorStop(0, color(0));
-	fi.addColorStop(0.25, color(0));
 	fi.addColorStop(0.5, c1);
 	fi.addColorStop(0.75, c2);
 	fi.addColorStop(1, color(0, 100));
@@ -290,27 +298,6 @@ function colorRect(cx, cy, w, h, c) {
 	rect(width / 2, height / 2, w, h);
 }
 
-function bgRect(p, cx, cy, w, h, c) {
-	p.push();
-	p.fill(0);
-	p.noStroke();
-	p.background(255);
-	let ctx = p.elt.getContext("2d");
-	let fi = ctx.createLinearGradient(
-		cx - w / 2,
-		cy - h / 2,
-		cx + w / 2,
-		cy + h / 2,
-	);
-	fi.addColorStop(0, color(c, 100, 255), 40);
-	fi.addColorStop(0.25, color(c, 100, 255), 40);
-	fi.addColorStop(0.5, color(c, 100, 255), 40);
-	fi.addColorStop(0.75, color(0, 0, 0), 40);
-	fi.addColorStop(1, color(0, 100));
-	ctx.fillStyle = fi;
-	p.rect(width / 2, height / 2, w, h);
-	p.pop();
-}
 function keyReleased() {
 	switch (key) {
 		case "1":
