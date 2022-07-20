@@ -1,9 +1,14 @@
 /*
-Andrés Senn
+
+Viejas estructuras
+
+Viejas estructuras aparecen recursivamente, todo se rompe y vuelve a nacer.
+
+Fxhash project
+Andrés Senn - 07/2022
+
 */
 let overlay;
-let loaded = false;
-let pg;
 
 let X = 0;
 let Y = 0;
@@ -16,38 +21,53 @@ let linesat;
 let linecolor;
 let cutSize;
 function setup() {
-	const seed = fxrand() * 1000000000000;
+	// Pixel density param
+	let uparams = getURLParams();
+	if (uparams.pd) {
+		pixelDensity(int(uparams.pd));
+	} else {
+		pixelDensity(1);
+	}
+
+	// Seed
+	const seed = int(fxrand() * 1000000000000);
+
 	overlay = document.querySelector(".overlay");
-	createCanvas(2160, 2160);
-	pg = createGraphics(width, height);
-	pixelDensity(1);
+	let cv = createCanvas(2160, 2160);
+	cv.id("ve");
+	cv.class("ve");
+
+	// Seeds
 	randomSeed(seed);
 	noiseSeed(seed);
-	// noLoop();
+
+	// Color mode
 	colorMode(HSB, 255, 255, 255, 255);
+
 	rectMode(CENTER);
 	imageMode(CENTER);
 	rotf = int(random(8));
 	X = random(100, 300);
 	Y = random(100, 300);
 	cutSize = random(30, 200);
+
 	// Background ---------------------------
 	background(255);
 	overlay.style.display = "none";
-	setShadow(6, 6, 15, 180);
+
+	// Rotate
 	rotateAll(8);
 
 	// Bg
 	colorRect(width / 2, height / 2, width * 2, height * 2, random(255));
 
 	// Slice 0 | 1
+	setShadow(8, 8, 20, 200);
 	if (random() < 0.5) {
 		rotateAll(8);
-		setShadow(8, 8, 20, 200);
 		sliceCanvas("X");
 	}
 	rotateAll(8);
-	setShadow(8, 8, 20, 200);
 	sliceCanvas("Y");
 
 	// Lines colors
@@ -81,37 +101,30 @@ function setup() {
 		}
 	}
 
-	// ghost
-	pg.background(255);
-	for (let i = 0; i < gPos.length; i++) {
-		pg.noStroke();
-		pg.fill(0);
-		pg.circle(gPos[i][0], gPos[i][1], 50);
-	}
+	// x & y step
 	xs = random(20, 60);
 	ys = random(20, 60);
 
+	// Title
+	document.title = `Viejas estructuras | Andr\u00e9s Senn | 2022`;
+
 	// Console
-	document.title = `Sin titulo | Andr\u00e9s Senn | 2022`;
 	console.log(
-		`%cSin titulo | Andr\u00e9s Senn | Projet: https://github.com/andrusenn/sintitulo01`,
+		`%cViejas estructuras | Andr\u00e9s Senn | Projet: https://github.com/andrusenn/viejasestructuras`,
 		"background:#333;border-radius:10px;background-size:15%;color:#eee;padding:10px;font-size:15px;text-align:center;",
 	);
 }
 function draw() {
-	//
-	//
 	for (let i = 0; i < 30; i++) {
+		// Draw gesture
 		if (STEP == 0) {
-			let multlen = 8;
-			// Shadow
 			setShadow(6, 6, 15, 100);
 			let pos = gPos[gestureIdx % gPos.length];
 			for (let i = 0; i < gPos.length; i++) {
 				if (pos !== gPos[i]) {
 					let d = dist(pos[0], pos[1], gPos[i][0], gPos[i][1]);
 					if (d > 50 && d < 180) {
-						stroke(random(255), random(255));
+						stroke(255);
 						let fi = drawingContext.createLinearGradient(
 							pos[0],
 							pos[1],
@@ -120,9 +133,15 @@ function draw() {
 						);
 						fi.addColorStop(0, color(0, 0));
 						fi.addColorStop(0.1, color(0, 100));
-						let linebright = map(d,50,180,100,255);
-						fi.addColorStop(0.5, color(linecolor, linesat, linebright));
-						fi.addColorStop(0.9, color(linecolor, linesat, linebright));
+						let linebright = map(d, 50, 180, 100, 255);
+						fi.addColorStop(
+							0.5,
+							color(linecolor, linesat, linebright),
+						);
+						fi.addColorStop(
+							0.9,
+							color(linecolor, linesat, linebright),
+						);
 						fi.addColorStop(1, color(0, 100));
 						drawingContext.strokeStyle = fi;
 						line(pos[0], pos[1], gPos[i][0], gPos[i][1]);
@@ -131,10 +150,13 @@ function draw() {
 			}
 			circle(pos[0], pos[1], random(2, 5));
 			gestureIdx++;
-			if(gestureIdx * multlen > gPos.length * multlen){
+
+			// On complete -> next step
+			if (gestureIdx > gPos.length) {
 				STEP++;
 			}
 		}
+		// Cut
 		if (STEP == 1) {
 			push();
 			if (X < width * random(0.1, 0.5)) {
@@ -142,49 +164,40 @@ function draw() {
 				rotate(rotf * (TAU / 8));
 				translate(-width / 2, -height / 2);
 				setShadow(20, 20, 10, 60);
-				// let d = dist(X, Y, width / 2, height / 2);
-				// let cutSize = random(50, 100);
-				let candraw = () => brightness(pg.get(X, Y)) > 50;
-				if (candraw()) {
-					let nz = map(sin(Y * 0.01), -1, 1, 0.001, 0.002);
-					const n = noise(X * nz, Y * nz, X * 0.001);
-					const dx = cos(n * TAU) * 100;
-					const dy = sin(n * TAU) * 100;
-					let img = get(
-						X,
-						Y,
-						random(10, cutSize),
-						random(10, cutSize),
-					);
-					noFill();
-					stroke(0, 150);
-					strokeWeight(2);
-					image(img, X + dx + img.width / 2, Y + dy + img.height / 2);
-					if (i % 30 == 0) {
-						noisemix(
-							X + dx + img.width / 2,
-							Y + dy + img.height / 2,
-							img.width,
-							img.height,
-						);
-						strokeWeight(1);
-						stroke(random(255));
-						line(
-							X + dx + img.width / 2,
-							Y + dy + img.height / 2,
-							X + dx + img.width / 2 + random(200, 800),
-							Y + dy + img.height / 2,
-						);
-					}
-					rect(
+				let nz = map(sin(Y * 0.01), -1, 1, 0.001, 0.002);
+				const n = noise(X * nz, Y * nz, X * 0.001);
+				const dx = cos(n * TAU) * 100;
+				const dy = sin(n * TAU) * 100;
+				let img = get(X, Y, random(10, cutSize), random(10, cutSize));
+				noFill();
+				stroke(0, 150);
+				strokeWeight(2);
+				image(img, X + dx + img.width / 2, Y + dy + img.height / 2);
+				if (i % 30 == 0) {
+					noisemix(
 						X + dx + img.width / 2,
 						Y + dy + img.height / 2,
 						img.width,
 						img.height,
 					);
+					strokeWeight(random(1, 3));
+					stroke(random(255));
+					line(
+						X + dx + img.width / 2 - random(200, 800),
+						Y + dy + img.height / 2,
+						X + dx + img.width / 2 + random(200, 800),
+						Y + dy + img.height / 2,
+					);
 				}
+				strokeWeight(1);
+				rect(
+					X + dx + img.width / 2,
+					Y + dy + img.height / 2,
+					img.width,
+					img.height,
+				);
 			}
-			pop();// *****************
+			pop(); // *****************
 			// Big loop --------
 			if (Y < height - random(100, 500)) {
 				Y += ys;
@@ -194,13 +207,13 @@ function draw() {
 			}
 			if (X > width - random(100, 500)) {
 				X = random(100, 500);
+				// Ends -> next step
 				STEP++;
 			}
 		}
-
-		
 	}
 	// ******************
+	// Finish
 	if (STEP == 2) {
 		noLoop();
 		if (random() < 0.5) {
@@ -210,6 +223,12 @@ function draw() {
 			setShadow(8, 8, 20, 200);
 			sliceCanvas("Y");
 		}
+		// Preview
+		setTimeout(function () {
+			if (!isFxpreview) {
+				fxpreview();
+			}
+		}, 500);
 	}
 }
 
@@ -250,7 +269,7 @@ function rotateAll(r = 8) {
 }
 function noisemix(_x, _y, _w, _h) {
 	push();
-	let s = 20;
+	let s = random(2, 5);
 	let c = random(0, 255);
 	let w = _w;
 	let h = _h;
@@ -263,7 +282,7 @@ function noisemix(_x, _y, _w, _h) {
 			}
 			noStroke();
 			fill(c);
-			rect(x, y, s + random(1, 50), s);
+			rect(x, y, s + random(1, 20), s);
 		}
 	}
 	pop();
@@ -299,23 +318,12 @@ function colorRect(cx, cy, w, h, c) {
 }
 
 function keyReleased() {
-	switch (key) {
-		case "1":
-			pixelDensity(1);
-			break;
-		case "2":
-			pixelDensity(2);
-			break;
-		case "3":
-			pixelDensity(3);
-			break;
-		case "4":
-			pixelDensity(4);
-			break;
-	}
 	if (key == "s" || key == "S") {
 		grabImage();
 	}
+}
+function doubleClicked() {
+	grabImage();
 }
 function grabImage() {
 	let date =
@@ -338,5 +346,5 @@ function grabImage() {
 		}`,
 		"background: #000; color: #ccc;padding:5px;font-size:15px",
 	);
-	saveCanvas("__" + date);
+	saveCanvas("ve_" + date);
 }
