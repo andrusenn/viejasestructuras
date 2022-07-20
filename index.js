@@ -102,8 +102,8 @@ function setup() {
 	}
 
 	// x & y step
-	xs = random(20, 60);
-	ys = random(20, 60);
+	xs = random(40, 60);
+	ys = random(40, 60);
 
 	// Title
 	document.title = `Viejas estructuras | Andr\u00e9s Senn | 2022`;
@@ -115,7 +115,7 @@ function setup() {
 	);
 }
 function draw() {
-	for (let i = 0; i < 30; i++) {
+	for (let i = 0; i < 10; i++) {
 		// Draw gesture
 		if (STEP == 0) {
 			setShadow(6, 6, 15, 100);
@@ -215,7 +215,6 @@ function draw() {
 	// ******************
 	// Finish
 	if (STEP == 2) {
-		noLoop();
 		if (random() < 0.5) {
 			setShadow(0, 0, 20, 200);
 			translate(random(-1000, 1000), random(-1000, 1000));
@@ -224,18 +223,17 @@ function draw() {
 			sliceCanvas("Y");
 		}
 		// Preview
-		setTimeout(function () {
-			if (!isFxpreview) {
-				fxpreview();
-			}
-		}, 500);
+		if (!isFxpreview) {
+			fxpreview();
+		}
+		noLoop();
 	}
 }
 
 function sliceCanvas(_slice) {
 	push();
 	noSmooth();
-	const num = int(random(2, 100));
+	const num = int(random(2, 80));
 	let imgs = [];
 
 	for (let s = 0; s < num; s++) {
